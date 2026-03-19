@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>For Immy ✨</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+:root{
+  --rose: #e8a0a0;
+  --gold: #c9a96e;
+  --cream: #faf6f0;
+  --deep: #1a0f0f;
+  --blush: #f2ddd3;
+  --wine: #6b2737;
+}
+
+html{scroll-snap-type:y mandatory;overflow-y:scroll;scroll-behavior:smooth;}
+body{background:#0d0608;font-family:'Jost',sans-serif;color:var(--cream);overflow-x:hidden;}
+
+/* ============ CANVAS & PARTICLES ============ */
+#canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+/* ============ SCROLL PROGRESS ============ */
+#progress{
+  position:fixed;right:24px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:10px;z-index:100;
+}
+.dot{
+  width:6px;height:6px;border-radius:50%;
+  border:1px solid rgba(255,255,255,0.4);
+  background:transparent;transition:all 0.4s ease;cursor:pointer;
+}
+.dot.active{background:var(--rose);border-color:var(--rose);transform:scale(1.4);}
+
+/* ============ SECTIONS ============ */
+section{
+  min-height:100vh;width:100%;
+  scroll-snap-align:start;
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+
+/* ============ OPENER ============ */
+#s0{background:#0d0608;}
+
+.envelope-wrap{
+  position:relative;z-index:10;
+  display:flex;flex-direction:column;align-items:center;gap:48px;
+}
+
+.envelope{
+  width:260px;height:180px;position:relative;cursor:pointer;
+  filter:drop-shadow(0 30px 60px rgba(200,100,100,0.2));
+  transition:transform 0.5s ease;
+}
+.envelope:hover{transform:scale(1.04) translateY(-4px);}
+.envelope:hover .env-flap{transform:rotateX(-160deg);}
+
+.env-body{
+  position:absolute;bottom:0;left:0;right:0;height:140px;
+  background:linear-gradient(135deg,#2a1a1a,#1f1010);
+  border:1px solid rgba(200,120,100,0.25);
+  border-radius:4px 4px 6px 6px;
+  display:flex;align-items:center;justify-content:center;
+}
+.env-seal{
+  width:44px;height:44px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#c9826e,#8b3a3a);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;
+  box-shadow:0 4px 20px rgba(140,60,60,0.4);
+}
+.env-flap{
+  position:absolute;top:0;left:0;right:0;height:100px;
+  clip-path:polygon(0 0,50% 60%,100% 0);
+  background:linear-gradient(160deg,#2e1a1a,#1a0e0e);
+  border:1px solid rgba(200,120,100,0.2);
+  transform-origin:top;transform-style:preserve-3d;
+  transition:transform 0.7s cubic-bezier(.4,0,.2,1);
+  border-radius:4px 4px 0 0;
+}
+
+.open-label{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(1rem,2.5vw,1.1rem);
+  font-weight:300;letter-spacing:0.35em;
+  color:rgba(255,255,255,0.5);
+  text-transform:uppercase;
+  animation:breathe 2.5s ease-in-out infinite;
+}
+@keyframes breathe{0%,100%{opacity:0.4;}50%{opacity:0.9;}}
+
+.for-immy{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(2.8rem,8vw,5rem);
+  font-weight:300;font-style:italic;
+  color:var(--cream);
+  letter-spacing:0.04em;
+  line-height:1;
+  text-align:center;
+  opacity:0;
+  transition:opacity 1.2s ease, transform 1.2s ease;
+  transform:translateY(12px);
+}
+.for-immy.show{opacity:1;transform:translateY(0);}
+
+/* ============ PETAL BURST ============ */
+.petal{
+  position:fixed;width:8px;height:12px;border-radius:50% 50% 50% 0;
+  pointer-events:none;z-index:200;opacity:0;
+  animation:petalFall var(--dur) var(--delay) ease-out forwards;
+}
+@keyframes petalFall{
+  0%{opacity:1;transform:translate(0,0) rotate(var(--rot)) scale(1);}
+  100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(calc(var(--rot) + 360deg)) scale(0.3);}
+}
+
+/* ============ CONTENT PANELS ============ */
+.panel{
+  position:relative;z-index:10;
+  max-width:700px;width:90%;
+  text-align:center;
+  opacity:0;transform:translateY(40px);
+  transition:opacity 1s ease, transform 1s ease;
+}
+.panel.visible{opacity:1;transform:translateY(0);}
+
+.panel-eyebrow{
+  font-family:'Jost',sans-serif;
+  font-size:0.7rem;letter-spacing:0.45em;text-transform:uppercase;
+  color:var(--rose);margin-bottom:28px;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+}
+.panel-eyebrow::before,.panel-eyebrow::after{
+  content:'';display:block;width:40px;height:0.5px;background:var(--rose);opacity:0.5;
+}
+
+.panel h2{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(2.4rem,6vw,4.2rem);
+  font-weight:300;font-style:italic;
+  line-height:1.1;margin-bottom:28px;
+  color:var(--cream);
+}
+.panel p{
+  font-family:'Jost',sans-serif;font-weight:200;
+  font-size:clamp(1rem,2vw,1.15rem);line-height:1.85;
+  color:rgba(250,246,240,0.75);margin-bottom:16px;
+}
+.panel strong{color:var(--gold);font-weight:300;}
+
+.panel-divider{
+  width:1px;height:48px;background:linear-gradient(to bottom,transparent,var(--rose),transparent);
+  margin:32px auto;opacity:0.5;
+}
+
+/* ============ SECTION BACKGROUNDS ============ */
+#s1{
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%,rgba(107,39,55,0.35),transparent),
+    #0d0608;
+}
+#s2{
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 50%,rgba(107,39,55,0.25),transparent),
+    #0d0608;
+}
+#s3{
+  background:
+    radial-gradient(ellipse 70% 60% at 80% 50%,rgba(80,55,20,0.28),transparent),
+    #0d0608;
+}
+#s4{
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 80%,rgba(90,40,55,0.28),transparent),
+    #0d0608;
+}
+#s5{
+  background:radial-gradient(ellipse 100% 80% at 50% 100%,rgba(107,39,55,0.4),#0d0608 70%);
+}
+
+/* ============ DETAIL CARDS ============ */
+.detail-row{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:16px;margin-top:36px;
+}
+.detail-card{
+  background:rgba(255,255,255,0.04);
+  border:0.5px solid rgba(200,169,110,0.2);
+  border-radius:12px;padding:20px 28px;
+  min-width:160px;flex:1;max-width:200px;
+}
+.detail-card .dc-label{
+  font-size:0.65rem;letter-spacing:0.4em;text-transform:uppercase;
+  color:var(--gold);opacity:0.7;margin-bottom:8px;
+}
+.detail-card .dc-val{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.6rem;font-weight:300;font-style:italic;color:var(--cream);
+}
+
+/* ============ FINAL SECTION ============ */
+.heart-line{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(2rem,5vw,3.4rem);
+  font-weight:300;font-style:italic;
+  color:var(--cream);line-height:1.5;margin-bottom:40px;
+}
+.heart-line em{color:var(--rose);}
+
+.signature{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.1rem;font-weight:300;
+  letter-spacing:0.25em;
+  color:rgba(250,246,240,0.45);
+  margin-top:48px;
+}
+
+/* ============ FLOATING ORBS ============ */
+.orb{
+  position:absolute;border-radius:50%;pointer-events:none;
+  animation:orbDrift var(--t) ease-in-out infinite alternate;
+}
+@keyframes orbDrift{
+  from{transform:translate(0,0);}
+  to{transform:translate(var(--mx),var(--my));}
+}
+
+/* ============ SCROLL CUE ============ */
+.scroll-cue{
+  position:absolute;bottom:40px;left:50%;transform:translateX(-50%);
+  z-index:10;display:flex;flex-direction:column;align-items:center;gap:10px;
+  opacity:0;animation:fadeCue 1s 3.5s ease forwards;
+}
+@keyframes fadeCue{to{opacity:1;}}
+.cue-text{font-size:0.65rem;letter-spacing:0.4em;text-transform:uppercase;color:rgba(255,255,255,0.3);}
+.cue-line{width:0.5px;height:48px;background:linear-gradient(to bottom,rgba(255,255,255,0.2),transparent);}
+
+/* ============ RESPONSIVE ============ */
+@media(max-width:600px){
+  .detail-card{max-width:100%;}
+  #progress{display:none;}
+}
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+<div id="progress"></div>
+
+<!-- OPENER -->
+<section id="s0">
+  <div class="envelope-wrap">
+    <p class="for-immy" id="forImmy">For Immy</p>
+    <div class="envelope" id="envelope" title="Open me">
+      <div class="env-flap" id="envFlap"></div>
+      <div class="env-body"><div class="env-seal">❤</div></div>
+    </div>
+    <p class="open-label">tap to open</p>
+  </div>
+  <div class="scroll-cue" id="scrollCue" style="display:none;">
+    <p class="cue-text">scroll</p>
+    <div class="cue-line"></div>
+  </div>
+</section>
+
+<!-- SLIDE 1: YOU -->
+<section id="s1">
+  <div class="orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(107,39,55,0.18),transparent 70%);top:-100px;left:-100px;--t:9s;--mx:40px;--my:30px;"></div>
+  <div class="panel" id="p1">
+    <div class="panel-eyebrow">tonight</div>
+    <h2>It's all about you.</h2>
+    <p>You deserve a night that feels exactly like you —<br/>beautiful, warm, and a little bit magical.</p>
+    <p>So I've planned something I hope you'll love.</p>
+    <div class="panel-divider"></div>
+    <p style="font-size:0.75rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.25);">Keep scrolling</p>
+  </div>
+</section>
+
+<!-- SLIDE 2: WEAR -->
+<section id="s2">
+  <div class="panel" id="p2">
+    <div class="panel-eyebrow">what to wear</div>
+    <h2>Dress like you mean it.</h2>
+    <p>Think elegant. Think <strong>you at your most beautiful</strong>.</p>
+    <p>Something you feel genuinely wonderful in —<br/>because tonight is a proper night out.</p>
+  </div>
+</section>
+
+<!-- SLIDE 3: LOGISTICS -->
+<section id="s3">
+  <div class="panel" id="p3">
+    <div class="panel-eyebrow">the plan</div>
+    <h2>Leave it all to me.</h2>
+    <p>I'll be picking you up and taking care of everything.<br/>All you need to do is be ready and look gorgeous.</p>
+    <div class="detail-row">
+      <div class="detail-card">
+        <div class="dc-label">leaving at</div>
+        <div class="dc-val">5:00 pm</div>
+      </div>
+      <div class="detail-card">
+        <div class="dc-label">dress code</div>
+        <div class="dc-val">Elegant</div>
+      </div>
+      <div class="detail-card">
+        <div class="dc-label">your job</div>
+        <div class="dc-val">Just show up</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 4: VENUE -->
+<section id="s4">
+  <div class="panel" id="p4">
+    <div class="panel-eyebrow">the destination</div>
+    <h2>Dinner at<br/><em style="color:var(--gold);">Blackbird</em></h2>
+    <p>Perched above the Brisbane River with sweeping views<br/>from the Story Bridge to Kangaroo Point —<br/><strong>one of Brisbane's most iconic restaurants.</strong></p>
+    <p>Think wood-fired steaks, candlelight, and the whole city<br/>glittering on the water below us.</p>
+  </div>
+</section>
+
+<!-- SLIDE 5: FINAL -->
+<section id="s5">
+  <div class="orb" style="width:600px;height:600px;background:radial-gradient(circle,rgba(107,39,55,0.22),transparent 70%);bottom:-150px;right:-150px;--t:11s;--mx:-50px;--my:-40px;"></div>
+  <div class="panel" id="p5">
+    <p class="heart-line">
+      Happy Birthday, Immy.<br/>
+      <em>I can't wait to spend it with you.</em>
+    </p>
+    <p style="color:rgba(255,255,255,0.45);font-size:0.95rem;line-height:1.9;">
+      You make every moment feel like something worth remembering.<br/>
+      Tonight is just me trying to give a little of that back.
+    </p>
+    <div class="panel-divider"></div>
+    <p class="signature">with love ♡</p>
+  </div>
+</section>
+
+<script>
+// ============ CANVAS PARTICLES ============
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let W,H,particles=[];
+
+function resize(){
+  W=canvas.width=window.innerWidth;
+  H=canvas.height=window.innerHeight;
+}
+resize();
+window.addEventListener('resize',resize);
+
+function randomParticle(){
+  return{
+    x:Math.random()*W,y:Math.random()*H,
+    r:Math.random()*1.5+0.3,
+    vx:(Math.random()-0.5)*0.15,
+    vy:(Math.random()-0.5)*0.15,
+    o:Math.random()*0.5+0.1,
+    flicker:Math.random()*0.015+0.005
+  };
+}
+
+for(let i=0;i<160;i++) particles.push(randomParticle());
+
+let time=0;
+function drawParticles(){
+  ctx.clearRect(0,0,W,H);
+  time+=0.01;
+  particles.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0)p.x=W;if(p.x>W)p.x=0;
+    if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+    const flick=Math.sin(time*p.flicker*100)*0.2+p.o;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(240,200,180,${flick})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+// ============ PROGRESS DOTS ============
+const sections=['s0','s1','s2','s3','s4','s5'];
+const prog=document.getElementById('progress');
+sections.forEach((id,i)=>{
+  const d=document.createElement('div');
+  d.className='dot'+(i===0?' active':'');
+  d.addEventListener('click',()=>document.getElementById(id).scrollIntoView({behavior:'smooth'}));
+  prog.appendChild(d);
+});
+
+const dots=document.querySelectorAll('.dot');
+function updateDots(){
+  const sy=window.scrollY,vh=window.innerHeight;
+  sections.forEach((id,i)=>{
+    const el=document.getElementById(id);
+    const rect=el.getBoundingClientRect();
+    dots[i].classList.toggle('active',rect.top<=vh/2&&rect.bottom>vh/2);
+  });
+}
+window.addEventListener('scroll',updateDots,{passive:true});
+
+// ============ PANEL REVEAL ============
+const panels=document.querySelectorAll('.panel');
+const io=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});
+},{threshold:0.3});
+panels.forEach(p=>io.observe(p));
+
+// ============ ENVELOPE OPEN ============
+let opened=false;
+const envelope=document.getElementById('envelope');
+const forImmy=document.getElementById('forImmy');
+const scrollCue=document.getElementById('scrollCue');
+
+// Show name first
+setTimeout(()=>forImmy.classList.add('show'),800);
+
+envelope.addEventListener('click',()=>{
+  if(opened)return;opened=true;
+  document.getElementById('envFlap').style.transform='rotateX(-165deg)';
+  spawnPetals();
+  setTimeout(()=>{
+    scrollCue.style.display='flex';
+  },900);
+});
+
+// ============ PETAL BURST ============
+function spawnPetals(){
+  const cx=window.innerWidth/2,cy=window.innerHeight/2;
+  const colors=['#e8a0a0','#c9a96e','#f2ddd3','#d4848a','#f0c8c0'];
+  for(let i=0;i<60;i++){
+    const p=document.createElement('div');
+    p.className='petal';
+    const angle=Math.random()*Math.PI*2;
+    const dist=150+Math.random()*250;
+    p.style.cssText=`
+      left:${cx}px;top:${cy}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      --rot:${Math.random()*360}deg;
+      --dx:${Math.cos(angle)*dist}px;
+      --dy:${Math.sin(angle)*dist}px;
+      --dur:${0.9+Math.random()*1.2}s;
+      --delay:${Math.random()*0.4}s;
+      opacity:0;
+    `;
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),2800);
+  }
+}
+
+// ============ AMBIENT PETALS (continuous after open) ============
+let ambientOn=false;
+function spawnAmbientPetal(){
+  if(!ambientOn)return;
+  const p=document.createElement('div');
+  p.className='petal';
+  const x=Math.random()*window.innerWidth;
+  p.style.cssText=`
+    left:${x}px;top:-20px;width:6px;height:9px;
+    background:rgba(232,160,160,${0.15+Math.random()*0.3});
+    --rot:${Math.random()*360}deg;
+    --dx:${(Math.random()-0.5)*80}px;
+    --dy:${window.innerHeight+60}px;
+    --dur:${5+Math.random()*5}s;
+    --delay:0s;opacity:0;
+  `;
+  document.body.appendChild(p);
+  setTimeout(()=>p.remove(),12000);
+}
+
+envelope.addEventListener('click',()=>{
+  setTimeout(()=>{ambientOn=true;setInterval(spawnAmbientPetal,600);},1000);
+});
+
+// ============ MOUSE PARALLAX ON OPENER ============
+document.getElementById('s0').addEventListener('mousemove',e=>{
+  const dx=(e.clientX/window.innerWidth-0.5)*12;
+  const dy=(e.clientY/window.innerHeight-0.5)*8;
+  envelope.style.transform=`translate(${dx}px,${dy}px) scale(${opened?1:1})`;
+});
+</script>
+</body>
+</html>
